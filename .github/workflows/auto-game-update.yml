@@ -1,0 +1,92 @@
+name: Auto publish game update
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '사격임무_금하선_RTS_v*.html'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: geumhaseon-game-update
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update update.json from newest HTML
+        shell: python
+        run: |
+          from pathlib import Path
+          import hashlib, json, re
+
+          root = Path(".")
+          rx = re.compile(r"^사격임무_금하선_RTS_v(\d+)\.(\d+)(?:[._](\d+))?\.html$", re.I)
+
+          found = []
+          for p in root.glob("사격임무_금하선_RTS_v*.html"):
+              m = rx.match(p.name)
+              if not m:
+                  continue
+              major = int(m.group(1))
+              minor = int(m.group(2))
+              patch = int(m.group(3) or 0)
+              found.append(((major, minor, patch), p))
+
+          if not found:
+              raise SystemExit("버전 HTML을 찾지 못했습니다.")
+
+          (major, minor, patch), game = max(found, key=lambda x: x[0])
+
+          # 기존 금하선 규칙: 1.86.1 -> 18601
+          build = major * 10000 + minor * 100 + patch
+
+          version = f"{major}.{minor}"
+          if patch:
+              version += f".{patch}"
+
+          sha256 = hashlib.sha256(game.read_bytes()).hexdigest()
+
+          data = {
+              "version": version,
+              "build": build,
+              "file": game.name,
+              "sha256": sha256,
+              "notes": f"사격임무: 금하선 RTS v{version}",
+              "mandatory": False
+          }
+
+          Path("update.json").write_text(
+              json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8"
+          )
+
+          print(f"version = {version}")
+          print(f"build   = {build}")
+          print(f"file    = {game.name}")
+          print(f"sha256  = {sha256}")
+
+      - name: Commit update.json
+        shell: bash
+        run: |
+          if git diff --quiet -- update.json; then
+            echo "update.json already current"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add update.json
+          git commit -m "chore: publish latest game update"
+          git push
