@@ -1,8 +1,8 @@
 {
-  "version": "1.86.1",
-  "build": 18601,
-  "file": "app/src/main/assets/game.html",
-  "sha256": "212a94c0d956ec89c995e862646ce438a732fa96a19845ced577c37928dbadc8",
-  "notes": "사격임무: 금하선 RTS v1.86.1",
+  "version": "1.98",
+  "build": 19800,
+  "file": "사격임무_금하선_RTS_v1.98.html",
+  "sha256": "38b020a3b9b8fc78032fd677dd0e8c6cbb0c1ac406c6f304d3921d6cfe15afc1",
+  "notes": "사격임무: 금하선 RTS v1.98",
   "mandatory": false
 }
