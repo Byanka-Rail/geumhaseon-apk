@@ -1,8 +1,8 @@
 {
-  "version": "2.6",
-  "build": 20600,
-  "file": "사격임무_금하선_RTS_v2.06.html",
-  "sha256": "dbf61fd39b1ee069604309ccb44d70bce21c01eae03382c3f587f7e90253c959",
-  "notes": "사격임무: 금하선 RTS v2.6",
+  "version": "2.7",
+  "build": 20700,
+  "file": "사격임무_금하선_RTS_v2.07.html",
+  "sha256": "0850f0c9e154cc1b0c31b0b67ca0f8d0ab98266df554f97749f6011d680ae034",
+  "notes": "사격임무: 금하선 RTS v2.7",
   "mandatory": false
 }
