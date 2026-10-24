@@ -1,0 +1,105 @@
+name: Auto publish Geumhaseon update
+
+on: [push, workflow_dispatch]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: geumhaseon-game-update
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Refresh update.json
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, re
+
+          root = Path(".")
+          rx = re.compile(
+              r"^사격임무_금하선_RTS_v(\d+)\.(\d+)(?:[._](\d+))?(?:[_-].*)?\.html$",
+              re.I
+          )
+
+          found = []
+          for p in root.glob("사격임무_금하선_RTS_v*.html"):
+              m = rx.match(p.name)
+              if not m:
+                  continue
+
+              major_s = m.group(1)
+              minor_s = m.group(2)
+              patch_s = m.group(3)
+
+              major = int(major_s)
+              minor = int(minor_s)
+              patch = int(patch_s or 0)
+
+              found.append(((major, minor, patch), (major_s, minor_s, patch_s), p))
+
+          if not found:
+              print("금하선 버전 HTML이 저장소 최상위에 없어 update.json을 건드리지 않습니다.")
+              raise SystemExit(0)
+
+          (major, minor, patch), (major_s, minor_s, patch_s), game = max(
+              found, key=lambda x: x[0]
+          )
+
+          # 기존 규칙:
+          # 1.86.1 -> 18601
+          # 1.98   -> 19800
+          # 2.05   -> 20500
+          build = major * 10000 + minor * 100 + patch
+
+          # 중요: 2.05를 2.5로 바꾸지 않고 파일명의 표기를 그대로 보존한다.
+          version = f"{major_s}.{minor_s}"
+          if patch_s is not None:
+              version += f".{patch_s}"
+
+          sha256 = hashlib.sha256(game.read_bytes()).hexdigest()
+
+          data = {
+              "version": version,
+              "build": build,
+              "file": game.name,
+              "sha256": sha256,
+              "notes": f"사격임무: 금하선 RTS v{version}",
+              "mandatory": False
+          }
+
+          Path("update.json").write_text(
+              json.dumps(data, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8"
+          )
+
+          print(f"version = {version}")
+          print(f"build   = {build}")
+          print(f"file    = {game.name}")
+          print(f"sha256  = {sha256}")
+          PY
+
+      - name: Commit update.json if changed
+        shell: bash
+        run: |
+          if git diff --quiet -- update.json; then
+            echo "update.json already current"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add update.json
+          git commit -m "chore: publish latest Geumhaseon update"
+          git push

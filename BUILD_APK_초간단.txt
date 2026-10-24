@@ -1,0 +1,9 @@
+사격임무: 금하선 APK 빌드
+
+1) GitHub에서 Byanka-Rail/geumhaseon-apk 저장소 생성
+2) 이 ZIP 내용 전체 업로드 (.github 포함)
+3) main 브랜치 Commit
+4) Actions > Build Android APK > Run workflow
+5) 완료 후 Artifacts > GEUMHASEON_APK 다운로드
+
+APK 파일은 artifact 안의 app-debug.apk 입니다.
