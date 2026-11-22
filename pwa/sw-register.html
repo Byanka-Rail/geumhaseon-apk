@@ -1,0 +1,4 @@
+<script>/* 금하선 PWA — 서비스 워커 등록 (Pages 빌드 때만 붙는다 · APK 안에서는 붙지 않음) */
+if('serviceWorker' in navigator && (location.protocol==='https:'||location.hostname==='localhost')){ window.addEventListener('load',function(){ navigator.serviceWorker.register('./sw.js').catch(function(){}); }); }
+</script>
+<link rel="apple-touch-icon" href="icon-180.png">
